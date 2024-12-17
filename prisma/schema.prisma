@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Plot {
+  id          String       @id @default(uuid())
+  section     String
+  lot         String
+  space       String
+  status      PlotStatus   @default(AVAILABLE)
+  price       Float
+  type        PlotType     @default(STANDARD)
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  sales       Sale[]
+  deceased    Deceased[]
+
+  @@unique([section, lot, space])
+}
+
+model Customer {
+  id            String    @id @default(uuid())
+  firstName     String
+  lastName      String
+  email         String    @unique
+  phone         String
+  street        String
+  city          String
+  state         String
+  zipCode       String
+  nextOfKinName String?
+  nextOfKinPhone String?
+  nextOfKinEmail String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sales         Sale[]
+}
+
+model Sale {
+  id            String         @id @default(uuid())
+  plotId        String
+  customerId    String
+  amount        Float
+  type          TransactionType
+  paymentMethod PaymentMethod
+  status        PaymentStatus  @default(PENDING)
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  plot          Plot          @relation(fields: [plotId], references: [id])
+  customer      Customer      @relation(fields: [customerId], references: [id])
+}
+
+model Deceased {
+  id           String    @id @default(uuid())
+  plotId       String
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime?
+  dateOfDeath  DateTime
+  dateOfBurial DateTime
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  plot         Plot      @relation(fields: [plotId], references: [id])
+}
+
+enum PlotStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum PlotType {
+  STANDARD
+  PREMIUM
+}
+
+enum TransactionType {
+  SALE
+  PAYMENT
+  REFUND
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT
+  CHECK
+  INSTALLMENT
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
